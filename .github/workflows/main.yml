@@ -1,0 +1,39 @@
+name: RDP
+
+on:
+  workflow_dispatch:
+
+jobs:
+  rdp:
+    runs-on: windows-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Set up RDP
+        shell: powershell
+        run: |
+          net user runneradmin P@ssw0rd!
+          net localgroup administrators runneradmin /add
+          netsh advfirewall set allprofiles state off
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -value 0
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+
+      - name: Install Tailscale
+        shell: powershell
+        run: |
+          choco install tailscale -y
+
+      - name: Start Tailscale
+        shell: powershell
+        run: |
+          tailscale up --authkey $env:TAILSCALE_AUTH_KEY --hostname github-rdp
+
+      - name: Show IP
+        shell: powershell
+        run: |
+          tailscale ip -4
+
+      - name: Keep Alive
+        shell: powershell
+        run: |
+          Start-Sleep -Seconds 21600
