@@ -9,39 +9,36 @@ jobs:
     timeout-minutes: 360
 
     steps:
-      - name: Set up RDP
-        shell: powershell
+      - name: Enable RDP + Set Password
         run: |
-          net user runneradmin P@ssw0rd!
+          net user runneradmin P@ssw0rd123
           net localgroup administrators runneradmin /add
-          netsh advfirewall set allprofiles state off
-          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+          reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
+          reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" /v UserAuthentication /t REG_DWORD /d 1 /f
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
 
       - name: Install Chocolatey
-        shell: powershell
         run: |
           Set-ExecutionPolicy Bypass -Scope Process -Force
-          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+          [System.Net.ServicePointManager]::SecurityProtocol = 3072
           iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
       - name: Install Tailscale
-        shell: powershell
-        run: |
-          choco install tailscale -y
+        run: choco install tailscale -y
 
       - name: Start Tailscale
-        shell: powershell
         run: |
-          $env:TSKEY="$env:TAILSCALE_AUTH_KEY"
-          & "C:\Program Files\Tailscale\tailscale.exe" up --authkey=$env:TSKEY --hostname=github-rdp
+          $env:TSKEY="${{ secrets.TAILSCALE_AUTH_KEY }}"
+          tailscale up --authkey $env:TSKEY
 
-      - name: Show IP
-        shell: powershell
+      - name: Show IP + Login Info
         run: |
-          & "C:\Program Files\Tailscale\tailscale.exe" ip
+          Write-Host "========================="
+          Write-Host "IP:"
+          tailscale ip -4
+          Write-Host "Username: runneradmin"
+          Write-Host "Password: P@ssw0rd123"
+          Write-Host "========================="
 
       - name: Keep Alive
-        shell: powershell
-        run: |
-          Start-Sleep -Seconds 21600
+        run: Start-Sleep -Seconds 21600
