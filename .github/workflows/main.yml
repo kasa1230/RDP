@@ -15,13 +15,14 @@ jobs:
           net user runneradmin P@ssw0rd!
           net localgroup administrators runneradmin /add
           netsh advfirewall set allprofiles state off
-          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -value 0
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
 
       - name: Install Chocolatey
         shell: powershell
         run: |
           Set-ExecutionPolicy Bypass -Scope Process -Force
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
           iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
       - name: Install Tailscale
@@ -32,12 +33,13 @@ jobs:
       - name: Start Tailscale
         shell: powershell
         run: |
-          & "C:\Program Files\Tailscale\tailscale.exe" up --authkey $env:TAILSCALE_AUTH_KEY --hostname github-rdp
+          $env:TSKEY="$env:TAILSCALE_AUTH_KEY"
+          & "C:\Program Files\Tailscale\tailscale.exe" up --authkey=$env:TSKEY --hostname=github-rdp
 
       - name: Show IP
         shell: powershell
         run: |
-          & "C:\Program Files\Tailscale\tailscale.exe" ip -4
+          & "C:\Program Files\Tailscale\tailscale.exe" ip
 
       - name: Keep Alive
         shell: powershell
