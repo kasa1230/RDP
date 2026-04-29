@@ -29,13 +29,13 @@ jobs:
       - name: Start Tailscale
         run: |
           $env:TSKEY="${{ secrets.TAILSCALE_AUTH_KEY }}"
-          tailscale up --authkey $env:TSKEY
+          & "C:\Program Files\Tailscale\tailscale.exe" up --authkey $env:TSKEY
 
       - name: Show IP + Login Info
         run: |
           Write-Host "========================="
           Write-Host "IP:"
-          tailscale ip -4
+          & "C:\Program Files\Tailscale\tailscale.exe" ip -4
           Write-Host "Username: runneradmin"
           Write-Host "Password: P@ssw0rd123"
           Write-Host "========================="
