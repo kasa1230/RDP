@@ -18,6 +18,12 @@ jobs:
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -value 0
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
 
+      - name: Install Chocolatey
+        shell: powershell
+        run: |
+          Set-ExecutionPolicy Bypass -Scope Process -Force
+          iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
       - name: Install Tailscale
         shell: powershell
         run: |
@@ -26,12 +32,12 @@ jobs:
       - name: Start Tailscale
         shell: powershell
         run: |
-          tailscale up --authkey $env:TAILSCALE_AUTH_KEY --hostname github-rdp
+          & "C:\Program Files\Tailscale\tailscale.exe" up --authkey $env:TAILSCALE_AUTH_KEY --hostname github-rdp
 
       - name: Show IP
         shell: powershell
         run: |
-          tailscale ip -4
+          & "C:\Program Files\Tailscale\tailscale.exe" ip -4
 
       - name: Keep Alive
         shell: powershell
